@@ -1,24 +1,43 @@
 package test;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Listeners;
+import org.testng.annotations.Parameters;
+import org.testng.annotations.Test;
+
+import testNGExamples.TestNGListner;
+
+@Listeners(TestNGListner.class)
 
 public class LoginTest {
+	
+	WebDriver driver;
+	
+	XSSFWorkbook wbook;
+	XSSFSheet sheet;
 
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
-		
+	@BeforeMethod	
+	public void Setup() throws IOException {
+	
 		System.setProperty("webdriver.chrome.driver", "chromedriver.exe");
-		//System.setProperty("webdriver.gecko.driver", "geckodriver.exe");
+		System.setProperty("webdriver.gecko.driver", "geckodriver.exe");
 		
-		WebDriver driver = new ChromeDriver();
+		driver = new ChromeDriver();
 		
 		//WebDriver driver = new FirefoxDriver();
 		
@@ -28,6 +47,16 @@ public class LoginTest {
 		
 		driver.manage().timeouts().implicitlyWait(5000, TimeUnit.MILLISECONDS);
 		
+		FileInputStream fis = new FileInputStream("exceldata.xlsx");
+		
+		wbook = new XSSFWorkbook(fis);
+		
+		sheet = wbook.getSheet("data");
+	}
+	
+	@Test
+	@Parameters({"username","password"})
+	public void Testcase1(String username, String password) {
 		WebElement LoginLink = driver.findElement(By.linkText("Log in"));
 		
 		LoginLink.click();
@@ -38,30 +67,33 @@ public class LoginTest {
 		WebElement Remember = driver.findElement(By.className("rememberMe"));
 		
 		
-		Username.sendKeys("jatrj18@gmail.com");
-		Password.sendKeys("R@jendr@");
+		String excelUsername = sheet.getRow(0).getCell(0).getStringCellValue();
+		String excelPassword = sheet.getRow(0).getCell(1).getStringCellValue();
+		
+		
+		Username.sendKeys(excelUsername);
+		Password.sendKeys(excelPassword);
 		Remember.click();
 		LoginBtn.click();
 		
-		WebElement LoginError = driver.findElement(By.id("msg_box"));
+		/*WebElement LoginError = driver.findElement(By.id("msg_box"));
 		
 		String ActError = LoginError.getText();
 		String ExpError = "The email or password you have entered is invalid.";
 		
-		if(ActError.equals(ExpError)) {
-			System.out.println("TC Passed");
-		}else {
-			System.out.println("TC Failed");
-		}
+		Assert.assertEquals(ActError, ExpError);
 		
 		List<WebElement> Links = driver.findElements(By.tagName("a"));
 		
-		System.out.println("Total Links" + Links.size());
+		System.out.println("Total Links:-" + Links.size());
 		
         List<WebElement> Input = driver.findElements(By.tagName("input"));
 		
-		System.out.println("Total Input" + Input.size());
-		
+		System.out.println("Total Input:-" + Input.size());*/
+	}
+	
+	@AfterMethod
+	public void CleanUp() {
 		driver.quit();
 		
 	}
